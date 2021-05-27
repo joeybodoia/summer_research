@@ -2,7 +2,7 @@
 '''
 
 from chajda.tsvector import lemmatize, Config
-from chajda.tsquery import to_tsquery
+from chajda.tsquery.__init__ import to_tsquery
 
 
 def augments_gensim(lang, word, config=Config(), n=5):
@@ -32,7 +32,9 @@ def augments_gensim(lang, word, config=Config(), n=5):
     # find the most similar words;
     try:
         topn = augments_gensim.model.most_similar(word, topn=n+1)
+        print('gensim topn = ', topn)
         words = ' '.join([ word for (word,rank) in topn ])
+        print('gensim words bf lemma = ', words)
 
     # gensim raises a KeyError when the input word is not in the vocabulary;
     # we return an empty list to indicate that there are no similar words
@@ -53,3 +55,43 @@ except AttributeError:
     import gensim.downloader
     augments_gensim.model = gensim.downloader.load("glove-wiki-gigaword-50")
 
+#print('tsquery gensim = ', to_tsquery('en', 'baby boy', augment_with=augments_gensim))
+
+
+import fasttext
+import fasttext.util
+
+
+def augments_fasttext(lang, word, config=Config(), n=5):
+    #load the model based on lang if it's not already loaded
+    try:
+        augments_fasttext.model
+    except AttributeError:
+        fasttext.util.download_model(lang, if_exists='ignore')
+        augments_fasttext.model = fasttext.load_model('cc.{0}.300.bin'.format(lang))
+
+   # print('fasttext dimension =', augments_fasttext.model.get_dimension())
+
+    print('fasttext similar words =', augments_fasttext.model.get_nearest_neighbors(word, k=40))
+    
+    #find the most similar words
+    try:
+        topn = augments_fasttext.model.get_nearest_neighbors(word, k=40)
+       # print('fasttext topn = ', topn)
+        words = ' '.join([ word for (rank, word) in topn ])
+       # print('fasttext words bf lemma = ', words)
+    except KeyError:
+        return []
+
+    # lemmatize the results so that they'll be in the search document's vocabulary
+    words = lemmatize(lang, words, add_positions=False, config=config).split()
+
+    #todo: figure out a better way to filter through the typo words that fasttext produces:
+    words = list(filter(lambda w: len(w)>1 and w != word, words))[:n]
+
+    
+   # print('returned fasttext words = ', words)
+    return words
+
+
+#print('tsquery fasttext = ', to_tsquery('en', 'baby boy', augment_with=augments_fasttext))

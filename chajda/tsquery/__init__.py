@@ -34,6 +34,9 @@ def to_tsquery(lang, query, augment_with=None, config=Config()):
     '''
     return parse(lang, query, augment_with, config)['tsquery']
 
+def test():
+    print("hello")
+
 
 def parse(lang, query, augment_with=None, config=Config()):
     '''
@@ -421,3 +424,6 @@ def _lemmatize_rawterm(lang, rawterm, config):
             children.extend(['_']*(diff-1))
             children.append(t1)
         return Tree('phrase', children)
+
+
+
