@@ -61,6 +61,7 @@ except AttributeError:
 import fasttext
 import fasttext.util
 
+fasttext_models = {}
 
 def augments_fasttext(lang, word, config=Config(), n=5):
     '''
@@ -88,11 +89,15 @@ def augments_fasttext(lang, word, config=Config(), n=5):
 
 
     #load the model based on lang if it's not already loaded
-    try:
-        augments_fasttext.model
-    except AttributeError:
+    if lang not in fasttext_models:
         fasttext.util.download_model(lang, if_exists='ignore')
-        augments_fasttext.model = fasttext.load_model('cc.{0}.300.bin'.format(lang))
+        fasttext_models[lang] = fasttext.load_model('cc.{0}.300.bin'.format(lang))
+
+   # try:
+   #     augments_fasttext.model
+   # except AttributeError:
+   #     fasttext.util.download_model(lang, if_exists='ignore')
+   #     augments_fasttext.model = fasttext.load_model('cc.{0}.300.bin'.format(lang))
 
    # print('fasttext dimension =', augments_fasttext.model.get_dimension())
 
@@ -100,8 +105,8 @@ def augments_fasttext(lang, word, config=Config(), n=5):
     
     #find the most similar words
     try:
-        topn = augments_fasttext.model.get_nearest_neighbors(word, k=n+5)
-       # print('fasttext topn = ', topn)
+        topn = fasttext_models[lang].get_nearest_neighbors(word, k=n+5)
+        print('fasttext topn = ', topn)
         words = ' '.join([ word for (rank, word) in topn ])
        # print('fasttext words bf lemma = ', words)
     except KeyError:
