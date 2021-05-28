@@ -32,9 +32,7 @@ def augments_gensim(lang, word, config=Config(), n=5):
     # find the most similar words;
     try:
         topn = augments_gensim.model.most_similar(word, topn=n+1)
-        print('gensim topn = ', topn)
         words = ' '.join([ word for (word,rank) in topn ])
-        print('gensim words bf lemma = ', words)
 
     # gensim raises a KeyError when the input word is not in the vocabulary;
     # we return an empty list to indicate that there are no similar words
@@ -55,7 +53,6 @@ except AttributeError:
     import gensim.downloader
     augments_gensim.model = gensim.downloader.load("glove-wiki-gigaword-50")
 
-#print('tsquery gensim = ', to_tsquery('en', 'baby boy', augment_with=augments_gensim))
 
 
 import fasttext
@@ -106,7 +103,6 @@ def augments_fasttext(lang, word, config=Config(), n=5):
     #find the most similar words
     try:
         topn = fasttext_models[lang].get_nearest_neighbors(word, k=n+5)
-        print('fasttext topn = ', topn)
         words = ' '.join([ word for (rank, word) in topn ])
        # print('fasttext words bf lemma = ', words)
     except KeyError:
